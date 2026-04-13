@@ -1,0 +1,15 @@
+# deps
+node_modules/
+
+# build
+dist/
+
+# env
+.env
+.env.local
+
+# superpowers
+.superpowers/
+
+# claude local settings
+.claude/settings.local.json

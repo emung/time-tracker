@@ -1,0 +1,7 @@
+node_modules
+.git
+docs
+.env
+.env.local
+.superpowers
+packages/web/dist
