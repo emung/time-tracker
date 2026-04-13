@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Safe area for iOS notch/home indicator */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Hide scrollbar on pill containers */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Color input sizing fix */
+input[type="color"] {
+  -webkit-appearance: none;
+  padding: 0;
+  border: none;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
+}
