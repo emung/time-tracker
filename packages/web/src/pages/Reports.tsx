@@ -2,30 +2,30 @@ import { useState } from "react";
 import { useReportSummary } from "../api/hooks";
 import { formatDuration } from "../lib/time";
 
-function startOfWeek(): string {
-  const d = new Date();
+function startOfWeek(date: Date): string {
+  const d = new Date(date);
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   d.setDate(diff);
   return d.toISOString().split("T")[0];
 }
 
-function endOfWeek(): string {
-  const d = new Date();
+function endOfWeek(date: Date): string {
+  const d = new Date(date);
   const day = d.getDay();
   const diff = d.getDate() + (day === 0 ? 0 : 7 - day);
   d.setDate(diff);
   return d.toISOString().split("T")[0];
 }
 
-function startOfMonth(): string {
-  const d = new Date();
+function startOfMonth(date: Date): string {
+  const d = new Date(date);
   d.setDate(1);
   return d.toISOString().split("T")[0];
 }
 
-function endOfMonth(): string {
-  const d = new Date();
+function endOfMonth(date: Date): string {
+  const d = new Date(date);
   d.setMonth(d.getMonth() + 1, 0);
   return d.toISOString().split("T")[0];
 }
@@ -36,14 +36,22 @@ export default function Reports() {
   const [period, setPeriod] = useState<Period>("week");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
+  const [referenceDate, setReferenceDate] = useState<Date>(() => new Date());
+
+  function navigate(direction: -1 | 1) {
+    const next = new Date(referenceDate);
+    if (period === "week") next.setDate(next.getDate() + direction * 7);
+    if (period === "month") next.setMonth(next.getMonth() + direction);
+    setReferenceDate(next);
+  }
 
   let from: string, to: string;
   if (period === "week") {
-    from = startOfWeek();
-    to = endOfWeek();
+    from = startOfWeek(referenceDate);
+    to = endOfWeek(referenceDate);
   } else if (period === "month") {
-    from = startOfMonth();
-    to = endOfMonth();
+    from = startOfMonth(referenceDate);
+    to = endOfMonth(referenceDate);
   } else {
     from = customFrom;
     to = customTo;
@@ -55,11 +63,25 @@ export default function Reports() {
 
   return (
     <div className="p-4 space-y-4">
-      <div className="flex gap-2">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => navigate(-1)}
+          disabled={period === "custom"}
+          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-gray-800 ${
+            period === "custom"
+              ? "text-gray-600 cursor-not-allowed opacity-50"
+              : "text-gray-400 hover:text-gray-200"
+          }`}
+        >
+          ‹
+        </button>
         {(["week", "month", "custom"] as Period[]).map((p) => (
           <button
             key={p}
-            onClick={() => setPeriod(p)}
+            onClick={() => {
+              if (p === "week" || p === "month") setReferenceDate(new Date());
+              setPeriod(p);
+            }}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
               period === p
                 ? "bg-blue-600 text-white"
@@ -69,6 +91,17 @@ export default function Reports() {
             {p === "week" ? "This Week" : p === "month" ? "This Month" : "Custom"}
           </button>
         ))}
+        <button
+          onClick={() => navigate(1)}
+          disabled={period === "custom"}
+          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-gray-800 ${
+            period === "custom"
+              ? "text-gray-600 cursor-not-allowed opacity-50"
+              : "text-gray-400 hover:text-gray-200"
+          }`}
+        >
+          ›
+        </button>
       </div>
 
       {period === "custom" && (
