@@ -39,10 +39,15 @@ export default function Reports() {
   const [referenceDate, setReferenceDate] = useState<Date>(() => new Date());
 
   function navigate(direction: -1 | 1) {
-    const next = new Date(referenceDate);
-    if (period === "week") next.setDate(next.getDate() + direction * 7);
-    if (period === "month") next.setMonth(next.getMonth() + direction);
-    setReferenceDate(next);
+    setReferenceDate((prev) => {
+      const next = new Date(prev);
+      if (period === "week") next.setDate(next.getDate() + direction * 7);
+      if (period === "month") {
+        next.setDate(1);
+        next.setMonth(next.getMonth() + direction);
+      }
+      return next;
+    });
   }
 
   let from: string, to: string;
@@ -60,6 +65,12 @@ export default function Reports() {
   const { data: rows } = useReportSummary(from, to);
 
   const totalSeconds = (rows ?? []).reduce((s, r) => s + r.total_seconds, 0);
+
+  const today = new Date();
+  const forwardDisabled =
+    period === "custom" ||
+    (period === "week" && startOfWeek(referenceDate) >= startOfWeek(today)) ||
+    (period === "month" && startOfMonth(referenceDate) >= startOfMonth(today));
 
   return (
     <div className="p-4 space-y-4">
@@ -93,9 +104,9 @@ export default function Reports() {
         ))}
         <button
           onClick={() => navigate(1)}
-          disabled={period === "custom"}
+          disabled={forwardDisabled}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-gray-800 ${
-            period === "custom"
+            forwardDisabled
               ? "text-gray-600 cursor-not-allowed opacity-50"
               : "text-gray-400 hover:text-gray-200"
           }`}
