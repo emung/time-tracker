@@ -9,6 +9,7 @@ import {
 
 interface Props {
   entry?: TimeEntry | null;
+  defaultDate?: string;
   onClose: () => void;
 }
 
@@ -23,7 +24,7 @@ function fromLocalDatetime(local: string): string {
   return new Date(local).toISOString();
 }
 
-export default function EntryForm({ entry, onClose }: Props) {
+export default function EntryForm({ entry, defaultDate, onClose }: Props) {
   const { data: projects } = useProjects();
   const createEntry = useCreateEntry();
   const updateEntry = useUpdateEntry();
@@ -31,10 +32,18 @@ export default function EntryForm({ entry, onClose }: Props) {
 
   const [projectId, setProjectId] = useState(entry?.project_id ?? "");
   const [startedAt, setStartedAt] = useState(
-    entry ? toLocalDatetime(entry.started_at) : "",
+    entry
+      ? toLocalDatetime(entry.started_at)
+      : defaultDate
+        ? `${defaultDate}T09:00`
+        : "",
   );
   const [stoppedAt, setStoppedAt] = useState(
-    entry?.stopped_at ? toLocalDatetime(entry.stopped_at) : "",
+    entry?.stopped_at
+      ? toLocalDatetime(entry.stopped_at)
+      : !entry && defaultDate
+        ? `${defaultDate}T10:00`
+        : "",
   );
   const [note, setNote] = useState(entry?.note ?? "");
 

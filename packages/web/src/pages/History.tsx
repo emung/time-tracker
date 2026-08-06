@@ -26,6 +26,7 @@ export default function History() {
   );
   const { data: entries } = useEntries({ date });
   const [editing, setEditing] = useState<TimeEntry | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
 
   const totalSeconds = (entries ?? []).reduce(
     (sum, e) => sum + entryDurationSeconds(e.started_at, e.stopped_at),
@@ -69,6 +70,15 @@ export default function History() {
         </button>
       </div>
 
+      <div className="flex justify-end">
+        <button
+          onClick={() => setShowAdd(true)}
+          className="text-xs text-blue-400 hover:text-blue-300"
+        >
+          + Add entry
+        </button>
+      </div>
+
       {byProject.size > 0 && (
         <div className="space-y-1">
           {[...byProject.values()]
@@ -92,6 +102,9 @@ export default function History() {
 
       {editing && (
         <EntryForm entry={editing} onClose={() => setEditing(null)} />
+      )}
+      {showAdd && (
+        <EntryForm defaultDate={date} onClose={() => setShowAdd(false)} />
       )}
     </div>
   );
