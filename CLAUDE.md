@@ -26,6 +26,16 @@ The web dev server proxies `/api` requests to `http://localhost:3100` (see `pack
 
 Local dev requires a running Postgres instance — set `DATABASE_URL` or it defaults to `postgres://postgres:postgres@localhost:5432/timetracker`.
 
+### Updating the local Docker instance
+
+The `app` service in `docker-compose.yml` builds from the local `Dockerfile` (`build: .`) rather than pulling a published image, so the running container only reflects the source as of its last build — it does **not** pick up new commits automatically. After finishing any feature or fix that should be reflected in the Docker-based instance, rebuild and recreate just the `app` container:
+
+```bash
+docker compose up --build -d app
+```
+
+This rebuilds the `time-tracker-app` image from the current source and recreates `app` in place. It does not touch the `postgres` service or its `pgdata` volume, so existing data is preserved.
+
 ## Architecture
 
 ### API (`packages/api`)
