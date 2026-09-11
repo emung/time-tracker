@@ -122,6 +122,12 @@ export function useReportSummary(from: string, to: string) {
   });
 }
 
+export function useSendWeeklyReport() {
+  return useMutation({
+    mutationFn: () => apiPost<{ sent: boolean; to: string }>("/api/reports/send-weekly"),
+  });
+}
+
 // ── Settings ──
 
 export function useReportRecipient() {

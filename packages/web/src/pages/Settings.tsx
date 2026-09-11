@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useReportRecipient, useUpdateReportRecipient } from "../api/hooks";
+import { useReportRecipient, useUpdateReportRecipient, useSendWeeklyReport } from "../api/hooks";
 
 export default function Settings() {
   const { data: recipient } = useReportRecipient();
   const updateReportRecipient = useUpdateReportRecipient();
+  const sendWeeklyReport = useSendWeeklyReport();
 
   const [email, setEmail] = useState("");
 
@@ -15,6 +16,12 @@ export default function Settings() {
     e.preventDefault();
     if (!email.trim()) return;
     await updateReportRecipient.mutateAsync({ email: email.trim() });
+  };
+
+  const handleSendNow = () => {
+    if (!recipient?.email) return;
+    if (!confirm(`Send this week's report to ${recipient.email} now?`)) return;
+    sendWeeklyReport.mutate();
   };
 
   return (
@@ -50,6 +57,26 @@ export default function Settings() {
           </p>
         )}
       </form>
+
+      <div className="pt-2 border-t border-gray-800 space-y-2">
+        <button
+          onClick={handleSendNow}
+          disabled={!recipient?.email || sendWeeklyReport.isPending}
+          className="bg-gray-800 hover:bg-gray-700 disabled:opacity-50 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+        >
+          {sendWeeklyReport.isPending ? "Sending..." : "Send this week's report now"}
+        </button>
+        {sendWeeklyReport.isSuccess && (
+          <p className="text-xs text-green-400">
+            Sent to {sendWeeklyReport.data?.to}.
+          </p>
+        )}
+        {sendWeeklyReport.isError && (
+          <p className="text-xs text-red-400">
+            {(sendWeeklyReport.error as Error).message}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
