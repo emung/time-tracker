@@ -1,13 +1,16 @@
 {
   "name": "api",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun run --hot src/index.ts",
+    "report:send": "bun run src/scripts/send-weekly-report.ts"
   },
   "dependencies": {
     "hono": "^4.12.12",
-    "postgres": "^3.4.5"
+    "postgres": "^3.4.5",
+    "resend": "^4.0.1"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/node": "latest"
   }
 }

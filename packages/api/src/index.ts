@@ -6,6 +6,7 @@ import timer from "./routes/timer";
 import entries from "./routes/entries";
 import reports from "./routes/reports";
 import exportCsv from "./routes/export";
+import { startWeeklyReportScheduler } from "./scheduler/weeklyReportScheduler";
 
 const app = new Hono();
 
@@ -22,6 +23,7 @@ app.use("/*", serveStatic({ root: "./packages/web/dist" }));
 app.get("/*", serveStatic({ root: "./packages/web/dist", path: "/index.html" }));
 
 await runMigrations();
+startWeeklyReportScheduler();
 
 export default {
   port: 3100,
