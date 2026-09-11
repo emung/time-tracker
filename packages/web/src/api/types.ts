@@ -23,3 +23,7 @@ export interface ReportRow {
   color: string;
   total_seconds: number;
 }
+
+export interface ReportRecipient {
+  email: string;
+}

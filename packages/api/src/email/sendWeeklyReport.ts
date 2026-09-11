@@ -147,12 +147,13 @@ function buildHtml(summary: WeeklySummary, daily: DailyBreakdown[]): string {
 export async function sendWeeklyReportEmail(
   summary: WeeklySummary,
   daily: DailyBreakdown[],
+  to: string,
 ): Promise<void> {
   const resend = new Resend(process.env.RESEND_API_KEY);
 
   await resend.emails.send({
     from: process.env.REPORT_EMAIL_FROM!,
-    to: process.env.REPORT_EMAIL_TO!,
+    to,
     subject: buildSubject(summary),
     text: buildText(summary, daily),
     html: buildHtml(summary, daily),

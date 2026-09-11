@@ -4,7 +4,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPatch, apiDelete } from "./client";
-import type { Project, TimeEntry, ReportRow } from "./types";
+import type { Project, TimeEntry, ReportRow, ReportRecipient } from "./types";
 
 // ── Projects ──
 
@@ -119,5 +119,23 @@ export function useReportSummary(from: string, to: string) {
     queryKey: ["reports", from, to],
     queryFn: () => apiGet<ReportRow[]>("/api/reports/summary", { from, to }),
     enabled: !!from && !!to,
+  });
+}
+
+// ── Settings ──
+
+export function useReportRecipient() {
+  return useQuery({
+    queryKey: ["settings", "reportRecipient"],
+    queryFn: () => apiGet<ReportRecipient>("/api/settings/report-recipient"),
+  });
+}
+
+export function useUpdateReportRecipient() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: { email: string }) =>
+      apiPatch<ReportRecipient>("/api/settings/report-recipient", data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["settings", "reportRecipient"] }),
   });
 }

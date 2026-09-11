@@ -1,5 +1,6 @@
 import { getCurrentWeekRange, getDailyBreakdown, getWeeklySummary } from "../reports/weekly";
 import { sendWeeklyReportEmail } from "../email/sendWeeklyReport";
+import { getReportRecipient } from "../settings/reportRecipient";
 
 const CHECK_INTERVAL_MS = 60_000;
 
@@ -33,7 +34,8 @@ async function tick() {
   try {
     const summary = await getWeeklySummary(from, to);
     const daily = await getDailyBreakdown(from, to);
-    await sendWeeklyReportEmail(summary, daily);
+    const recipient = await getReportRecipient();
+    await sendWeeklyReportEmail(summary, daily, recipient);
     console.log(`Weekly report email sent for week of ${weekStart}`);
   } catch (err) {
     console.error("Failed to send weekly report email:", err);

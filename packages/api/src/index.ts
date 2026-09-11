@@ -6,6 +6,7 @@ import timer from "./routes/timer";
 import entries from "./routes/entries";
 import reports from "./routes/reports";
 import exportCsv from "./routes/export";
+import settings from "./routes/settings";
 import { startWeeklyReportScheduler } from "./scheduler/weeklyReportScheduler";
 
 const app = new Hono();
@@ -16,6 +17,7 @@ app.route("/", timer);
 app.route("/", entries);
 app.route("/", reports);
 app.route("/", exportCsv);
+app.route("/", settings);
 
 // Serve frontend static files in production
 // root is relative to cwd — in Docker, cwd is /app
