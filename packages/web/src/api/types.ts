@@ -27,3 +27,10 @@ export interface ReportRow {
 export interface ReportRecipient {
   email: string;
 }
+
+export interface ImportResult {
+  imported: number;
+  skipped: number;
+  projects_created: number;
+  warnings: string[];
+}

@@ -4,7 +4,13 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPatch, apiDelete } from "./client";
-import type { Project, TimeEntry, ReportRow, ReportRecipient } from "./types";
+import type {
+  Project,
+  TimeEntry,
+  ReportRow,
+  ReportRecipient,
+  ImportResult,
+} from "./types";
 
 // ── Projects ──
 
@@ -125,6 +131,21 @@ export function useReportSummary(from: string, to: string) {
 export function useSendWeeklyReport() {
   return useMutation({
     mutationFn: () => apiPost<{ sent: boolean; to: string }>("/api/reports/send-weekly"),
+  });
+}
+
+// ── Import ──
+
+export function useImportCsv() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (csv: string) => apiPost<ImportResult>("/api/import/csv", { csv }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["entries"] });
+      qc.invalidateQueries({ queryKey: ["projects"] });
+      qc.invalidateQueries({ queryKey: ["timer"] });
+      qc.invalidateQueries({ queryKey: ["reports"] });
+    },
   });
 }
 
