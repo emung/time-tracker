@@ -134,6 +134,12 @@ export function useSendWeeklyReport() {
   });
 }
 
+export function useSendMonthlyReport() {
+  return useMutation({
+    mutationFn: () => apiPost<{ sent: boolean; to: string }>("/api/reports/send-monthly"),
+  });
+}
+
 // ── Import ──
 
 export function useImportCsv() {

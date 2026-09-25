@@ -3,6 +3,7 @@ import {
   useReportRecipient,
   useUpdateReportRecipient,
   useSendWeeklyReport,
+  useSendMonthlyReport,
   useImportCsv,
 } from "../api/hooks";
 
@@ -10,6 +11,7 @@ export default function Settings() {
   const { data: recipient } = useReportRecipient();
   const updateReportRecipient = useUpdateReportRecipient();
   const sendWeeklyReport = useSendWeeklyReport();
+  const sendMonthlyReport = useSendMonthlyReport();
   const importCsv = useImportCsv();
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -31,6 +33,12 @@ export default function Settings() {
     sendWeeklyReport.mutate();
   };
 
+  const handleSendMonthlyNow = () => {
+    if (!recipient?.email) return;
+    if (!confirm(`Send this month's report to ${recipient.email} now?`)) return;
+    sendMonthlyReport.mutate();
+  };
+
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = ""; // allow re-selecting the same file
@@ -44,7 +52,7 @@ export default function Settings() {
 
       <form onSubmit={handleSave} className="space-y-2">
         <label className="block text-sm text-gray-400">
-          Weekly report recipient
+          Report recipient
         </label>
         <div className="flex gap-2">
           <input
@@ -73,21 +81,40 @@ export default function Settings() {
       </form>
 
       <div className="pt-2 border-t border-gray-800 space-y-2">
-        <button
-          onClick={handleSendNow}
-          disabled={!recipient?.email || sendWeeklyReport.isPending}
-          className="bg-gray-800 hover:bg-gray-700 disabled:opacity-50 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-        >
-          {sendWeeklyReport.isPending ? "Sending..." : "Send this week's report now"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleSendNow}
+            disabled={!recipient?.email || sendWeeklyReport.isPending}
+            className="bg-gray-800 hover:bg-gray-700 disabled:opacity-50 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          >
+            {sendWeeklyReport.isPending ? "Sending..." : "Send this week's report now"}
+          </button>
+          <button
+            onClick={handleSendMonthlyNow}
+            disabled={!recipient?.email || sendMonthlyReport.isPending}
+            className="bg-gray-800 hover:bg-gray-700 disabled:opacity-50 rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          >
+            {sendMonthlyReport.isPending ? "Sending..." : "Send this month's report now"}
+          </button>
+        </div>
         {sendWeeklyReport.isSuccess && (
           <p className="text-xs text-green-400">
-            Sent to {sendWeeklyReport.data?.to}.
+            Weekly report sent to {sendWeeklyReport.data?.to}.
           </p>
         )}
         {sendWeeklyReport.isError && (
           <p className="text-xs text-red-400">
             {(sendWeeklyReport.error as Error).message}
+          </p>
+        )}
+        {sendMonthlyReport.isSuccess && (
+          <p className="text-xs text-green-400">
+            Monthly report sent to {sendMonthlyReport.data?.to}.
+          </p>
+        )}
+        {sendMonthlyReport.isError && (
+          <p className="text-xs text-red-400">
+            {(sendMonthlyReport.error as Error).message}
           </p>
         )}
       </div>

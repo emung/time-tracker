@@ -56,6 +56,30 @@ same running-timer-counts semantics as `getWeeklySummary`). `sendWeeklyReportEma
 `WeeklySummary` and `DailyBreakdown[]` and renders a styled, table-based HTML email (inline styles
 for email-client compatibility — project color dots reuse `projects.color`).
 
+## Monthly report email (2026-09-26)
+
+Sent automatically at 18:00 (`REPORT_TIMEZONE`) on the **last day of each month**, to the same
+recipient as the weekly email (`getReportRecipient`; the Settings label is now "Report recipient").
+Content: per-project totals for the calendar month plus a **per-week breakdown** (Monday–Sunday
+weeks clipped to the month, e.g. "Sep 1 – Sep 6"; empty weeks show "No time tracked").
+
+- `packages/api/src/reports/monthly.ts`: `getCurrentMonthRange(tz, now?)`,
+  `getWeeksInRange(from, to)` (pure), `getWeeklyBreakdown(from, to)` (SQL groups by ISO-week
+  Monday of `started_at::date`, same running-timer semantics as `weekly.ts`). Month totals reuse
+  `getWeeklySummary(from, to)` — despite the name it works for any range.
+- `packages/api/src/scheduler/monthlyReportScheduler.ts`: separate `setInterval` tick mirroring
+  the weekly one; `shouldFireMonthlyNow(date, tz)` is the pure predicate; in-memory
+  `lastSentMonthStart` guard (same restart tradeoff as weekly). Started from `index.ts`.
+- `packages/api/src/email/reportLayout.ts`: shared HTML/text renderer (`ReportContent` with
+  labelled `sections`) used by both `sendWeeklyReport.ts` and `sendMonthlyReport.ts`. The weekly
+  email output was verified byte-identical after this extraction.
+- Manual triggers: `POST /api/reports/send-monthly` (Settings button "Send this month's report
+  now"), and `bun run report:send-monthly` in `packages/api`.
+- Tests: `packages/api/src/reports/monthly.test.ts` (month range incl. leap years/timezone,
+  week splitting, fire predicate across DST).
+
+When the last day of the month is a Friday, both the weekly and the monthly email are sent.
+
 ## Full CSV export / import (2026-09-25)
 
 Settings page has a "Data" section with **Export all (CSV)** (`GET /api/export/all`) and

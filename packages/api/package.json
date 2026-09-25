@@ -2,7 +2,8 @@
   "name": "api",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
-    "report:send": "bun run src/scripts/send-weekly-report.ts"
+    "report:send": "bun run src/scripts/send-weekly-report.ts",
+    "report:send-monthly": "bun run src/scripts/send-monthly-report.ts"
   },
   "dependencies": {
     "hono": "^4.12.12",

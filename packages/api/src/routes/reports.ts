@@ -1,6 +1,8 @@
 import { Hono } from "hono";
 import { getCurrentWeekRange, getDailyBreakdown, getWeeklySummary } from "../reports/weekly";
+import { getCurrentMonthRange, getWeeklyBreakdown } from "../reports/monthly";
 import { sendWeeklyReportEmail } from "../email/sendWeeklyReport";
+import { sendMonthlyReportEmail } from "../email/sendMonthlyReport";
 import { getReportRecipient } from "../settings/reportRecipient";
 
 const app = new Hono();
@@ -34,6 +36,26 @@ app.post("/api/reports/send-weekly", async (c) => {
     return c.json({ sent: true, to: recipient });
   } catch (err) {
     console.error("Failed to send weekly report email:", err);
+    return c.json({ error: "failed to send email" }, 500);
+  }
+});
+
+app.post("/api/reports/send-monthly", async (c) => {
+  const timezone = process.env.REPORT_TIMEZONE ?? "Europe/Bucharest";
+  const { from, to } = getCurrentMonthRange(timezone);
+  const recipient = await getReportRecipient();
+
+  if (!recipient) {
+    return c.json({ error: "no report recipient configured" }, 400);
+  }
+
+  try {
+    const summary = await getWeeklySummary(from, to);
+    const weeks = await getWeeklyBreakdown(from, to);
+    await sendMonthlyReportEmail(summary, weeks, recipient);
+    return c.json({ sent: true, to: recipient });
+  } catch (err) {
+    console.error("Failed to send monthly report email:", err);
     return c.json({ error: "failed to send email" }, 500);
   }
 });
