@@ -11,8 +11,8 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
+    # HTTPS only — port 80 is left to the host's nginx, which redirects to https://
     ports:
-      - "80:80"
       - "443:443"
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-raspberrypi.local}

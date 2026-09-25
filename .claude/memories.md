@@ -122,8 +122,11 @@ defaults equal to the old hardcoded values (`admin`/`P4ssw0rd`/`timetracker`) so
 `pgdata` volume keeps working. Those vars only apply when the volume is first initialised.
 
 **Caddy + basic auth, Pi only (2026-09-26):** `Caddyfile` + `docker-compose.pi.yml` put a
-`caddy:2-alpine` container in front of the app (HTTPS via `tls internal` local CA, HTTP→HTTPS
-redirect, `basic_auth`). The override is activated **only** by
+`caddy:2-alpine` container in front of the app (HTTPS via `tls internal` local CA, `basic_auth`).
+Caddy publishes **443 only** (`auto_https disable_redirects`): the Pi runs a host nginx on port 80
+that the user wants to keep — its `tracker` site (`server_name tracker.local`, previously
+`proxy_pass http://localhost:3100`) is repurposed as a `301` to `https://`. The user's Pi
+hostname is `rpi` and the app is reached as `tracker.local`, so `SITE_ADDRESS=tracker.local`. The override is activated **only** by
 `COMPOSE_FILE=docker-compose.yml:docker-compose.pi.yml` in the Pi's `.env` — the base
 `docker-compose.yml` is untouched and the Mac must keep working without Caddy (explicit user
 requirement). Deliberately *not* named `docker-compose.override.yml` (auto-loaded everywhere).
