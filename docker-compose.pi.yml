@@ -1,0 +1,37 @@
+# Raspberry Pi only — enabled by COMPOSE_FILE in the Pi's .env (see docs/raspberry-pi.md).
+# Puts Caddy (HTTPS + basic auth) in front of the app and stops publishing :3100 on the LAN,
+# so the only way in is through Caddy. Not named docker-compose.override.yml on purpose:
+# that name would be auto-loaded on the Mac too.
+
+services:
+  app:
+    # Drop the base file's 3100:3100 mapping; Caddy reaches the app over the compose network
+    ports: !reset []
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-raspberrypi.local}
+      BASIC_AUTH_USER: ${BASIC_AUTH_USER:?set BASIC_AUTH_USER in .env}
+      BASIC_AUTH_HASH: ${BASIC_AUTH_HASH:?set BASIC_AUTH_HASH in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Keeps the local CA + issued certs across restarts (devices that trust the CA stay happy)
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    # YAML anchors don't cross files, so the base file's log rotation is repeated here
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  caddy_data:
+  caddy_config:

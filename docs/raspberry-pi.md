@@ -35,9 +35,74 @@ docker compose up --build -d
 ```
 
 Set `POSTGRES_*` **before** the first start — Postgres only reads them when it initialises the
-`pgdata` volume. The app is then reachable at `http://<pi-ip>:3100`.
+`pgdata` volume. Set up Caddy (next section) before the first start too, so the app is never
+exposed without a login.
 
-Note the app has no authentication — keep port 3100 on your LAN (don't port-forward it).
+## HTTPS + basic auth with Caddy
+
+The app itself has no authentication, and the base compose file publishes port 3100 to the
+whole LAN. On the Pi, `docker-compose.pi.yml` adds a [Caddy](https://caddyserver.com) container
+in front of it that:
+
+- serves HTTPS on 443 using Caddy's own local CA (`tls internal`, no Let's Encrypt needed) and
+  redirects HTTP (80) to HTTPS, so the password never crosses the LAN in cleartext;
+- asks for a username/password (`basic_auth`) on every request;
+- removes the app's `3100:3100` port mapping (`ports: !reset []`, needs Compose ≥ 2.24.4), so
+  Caddy is the only way in. Don't rely on ufw for this — Docker-published ports bypass it.
+
+The Mac setup is unaffected: the override is only loaded when `COMPOSE_FILE` is set in `.env`.
+
+1. Create a bcrypt hash of your password (you're prompted for it, so it stays out of shell
+   history):
+
+   ```bash
+   docker run --rm -it caddy:2-alpine caddy hash-password
+   ```
+
+2. Add to the Pi's `.env` (templates are in `.env.example`):
+
+   ```dotenv
+   COMPOSE_FILE=docker-compose.yml:docker-compose.pi.yml
+   SITE_ADDRESS=raspberrypi.local
+   BASIC_AUTH_USER=admin
+   BASIC_AUTH_HASH='$2a$14$...'
+   ```
+
+   - **Keep the single quotes** around the hash — without them Compose treats each `$...` as a
+     variable and silently corrupts it.
+   - `SITE_ADDRESS` is what you type in the browser: `<hostname>.local` (Raspberry Pi OS
+     announces it via mDNS) or a fixed IP such as `192.168.1.50`. The certificate is issued for
+     exactly this name, so use the same one on every device.
+
+3. Start (or restart) everything — `COMPOSE_FILE` makes plain `docker compose` load both files:
+
+   ```bash
+   docker compose up --build -d
+   ```
+
+4. Check:
+
+   ```bash
+   curl -I http://<pi-ip>:3100              # connection refused — app no longer exposed
+   curl -kI https://raspberrypi.local       # 401 Unauthorized
+   curl -kI -u admin:<password> https://raspberrypi.local   # 200
+   ```
+
+The app is now at `https://<SITE_ADDRESS>`. Browsers warn about the certificate until they
+trust Caddy's local root CA. Either accept the warning once per device, or export the root
+certificate and install it as trusted on your devices:
+
+```bash
+docker compose cp caddy:/data/caddy/pki/authorities/local/root.crt ./caddy-root.crt
+```
+
+The CA lives in the `caddy_data` volume, so it survives restarts and rebuilds — don't delete
+that volume or devices will have to trust a new one.
+
+To change the password, generate a new hash, update `BASIC_AUTH_HASH` in `.env` and run
+`docker compose up -d caddy`.
+
+Still keep this on your LAN — don't port-forward 80/443 to the Pi.
 
 ## Running 24/7
 

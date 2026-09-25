@@ -121,6 +121,19 @@ SIGTERM, so stops used to wait 10s for SIGKILL), json-file log rotation (3×10 M
 defaults equal to the old hardcoded values (`admin`/`P4ssw0rd`/`timetracker`) so the existing Mac
 `pgdata` volume keeps working. Those vars only apply when the volume is first initialised.
 
+**Caddy + basic auth, Pi only (2026-09-26):** `Caddyfile` + `docker-compose.pi.yml` put a
+`caddy:2-alpine` container in front of the app (HTTPS via `tls internal` local CA, HTTP→HTTPS
+redirect, `basic_auth`). The override is activated **only** by
+`COMPOSE_FILE=docker-compose.yml:docker-compose.pi.yml` in the Pi's `.env` — the base
+`docker-compose.yml` is untouched and the Mac must keep working without Caddy (explicit user
+requirement). Deliberately *not* named `docker-compose.override.yml` (auto-loaded everywhere).
+The override removes the app's `3100:3100` mapping with `ports: !reset []` (Compose ≥ 2.24.4) so
+Caddy is the only entry point; Docker-published ports bypass ufw, so this is the real protection.
+`SITE_ADDRESS`, `BASIC_AUTH_USER`, `BASIC_AUTH_HASH` come from `.env` via `{$VAR}` placeholders
+(no secrets in git); the bcrypt hash must be **single-quoted** in `.env` or Compose interpolates
+its `$`s. Local CA persists in the `caddy_data` volume. Verified locally: 308 redirect, 401 without
+or with wrong creds, pass-through with correct creds. Not yet verified on the real Pi.
+
 Known Pi 5 caveat: the default kernel uses 16K pages; if containers crash-loop with
 allocator/page-size errors, switch to the 4K kernel (`kernel=kernel8.img` in
 `/boot/firmware/config.txt`). Not yet verified on real Pi hardware.

@@ -1,0 +1,14 @@
+# Raspberry Pi only — used by docker-compose.pi.yml, not by the Mac setup.
+# HTTPS via Caddy's local CA (no public ACME) + basic auth in front of the app.
+# All values come from the Pi's .env, so no secrets live in this file.
+
+{$SITE_ADDRESS} {
+	tls internal
+
+	basic_auth {
+		{$BASIC_AUTH_USER} {$BASIC_AUTH_HASH}
+	}
+
+	encode zstd gzip
+	reverse_proxy app:3100
+}

@@ -36,7 +36,9 @@ docker compose up --build -d app
 
 This rebuilds the `time-tracker-app` image from the current source and recreates `app` in place. It does not touch the `postgres` service or its `pgdata` volume, so existing data is preserved.
 
-The same setup runs on a Raspberry Pi 5 (arm64) for 24/7 use — see `docs/raspberry-pi.md`.
+The same setup runs on a Raspberry Pi 5 (arm64) for 24/7 use — see `docs/raspberry-pi.md`. On the
+Pi only, `docker-compose.pi.yml` + `Caddyfile` add Caddy (HTTPS + basic auth) in front of the app,
+enabled via `COMPOSE_FILE` in the Pi's `.env`; never make the Mac setup depend on them.
 
 ## Architecture
 

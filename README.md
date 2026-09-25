@@ -21,8 +21,10 @@ Raspberry Pi 5 that stays on all the time.
   before writing anything and can be re-run without creating duplicates.
 - Mobile-first dark UI (bottom nav on phones, top nav on desktop).
 
-> **No authentication.** Anyone who can reach the app can read and edit your data. Keep it on
-> your LAN or behind a VPN/reverse proxy with auth, and don't port-forward it.
+> **No authentication in the app.** Anyone who can reach it can read and edit your data. Keep it
+> on your LAN or behind a VPN/reverse proxy with auth, and don't port-forward it. On the
+> Raspberry Pi, the optional Caddy setup adds HTTPS and basic auth in front of the app; see
+> [docs/raspberry-pi.md](docs/raspberry-pi.md#https--basic-auth-with-caddy).
 
 ## Tech stack
 
@@ -70,8 +72,9 @@ This recreates only the `app` container. Postgres and its data volume stay as th
 ### Raspberry Pi 5
 
 The same `Dockerfile` and `docker-compose.yml` run unchanged on a Pi 5 with a **64-bit** OS.
-See [docs/raspberry-pi.md](docs/raspberry-pi.md) for setup, running it all the time,
-moving data over from another machine and the kernel page-size caveat.
+See [docs/raspberry-pi.md](docs/raspberry-pi.md) for setup, HTTPS + basic auth via Caddy
+(Pi only), running it all the time, moving data over from another machine and the kernel
+page-size caveat.
 
 ## Local development
 
