@@ -55,3 +55,28 @@ for the current week (Monday–Sunday, including empty days as "No time tracked"
 same running-timer-counts semantics as `getWeeklySummary`). `sendWeeklyReportEmail` now takes both
 `WeeklySummary` and `DailyBreakdown[]` and renders a styled, table-based HTML email (inline styles
 for email-client compatibility — project color dots reuse `projects.color`).
+
+## Full CSV export / import (2026-09-25)
+
+Settings page has a "Data" section with **Export all (CSV)** (`GET /api/export/all`) and
+**Import CSV** (`POST /api/import/csv`, JSON body `{ csv }` — the browser reads the file with
+`file.text()`, no multipart). Shared RFC 4180 helpers live in `packages/api/src/csv.ts`
+(`csvRow`, `parseCsv`; unit tests in `csv.test.ts`, run with `bun test` in `packages/api`).
+The older per-range `GET /api/export/csv` (Reports page) now also uses `csvRow` — before, a
+project name containing a comma produced a broken row.
+
+Full export columns: `id,project_id,project,project_color,project_archived,started_at,stopped_at,duration_minutes,note`
+(timestamps ISO UTC; a running timer is exported with empty `stopped_at`). Import is
+header-driven (column order irrelevant); only `project` and `started_at` are required, so the
+Reports-range export is importable too. `duration_minutes`/`date` are ignored on import.
+
+Import semantics:
+- **All-or-nothing validation**: any invalid row rejects the whole file (400 with per-row errors).
+  Inserts then run in one `sql.begin` transaction.
+- **Idempotent**: an entry is skipped if its `id` already exists, or if an entry with the same
+  project + `started_at` + `stopped_at` exists. Entries keep their original UUIDs.
+- **Projects**: matched by `project_id`, then by exact name (non-archived preferred), else created
+  (reusing the exported id, color, archived flag).
+- **Running timer**: max one running row per file; it is skipped with a warning if a different
+  timer is already running (preserves the one-running-timer app invariant).
+- Import does not check overlaps between entries (same known gap as `POST /api/entries`).

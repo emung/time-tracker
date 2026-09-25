@@ -6,6 +6,7 @@ import timer from "./routes/timer";
 import entries from "./routes/entries";
 import reports from "./routes/reports";
 import exportCsv from "./routes/export";
+import importCsv from "./routes/import";
 import settings from "./routes/settings";
 import { startWeeklyReportScheduler } from "./scheduler/weeklyReportScheduler";
 
@@ -17,6 +18,7 @@ app.route("/", timer);
 app.route("/", entries);
 app.route("/", reports);
 app.route("/", exportCsv);
+app.route("/", importCsv);
 app.route("/", settings);
 
 // Serve frontend static files in production

@@ -41,7 +41,7 @@ This rebuilds the `time-tracker-app` image from the current source and recreates
 ### API (`packages/api`)
 
 - **Entry point**: `src/index.ts` — creates Hono app, registers route modules, runs migrations on startup, serves the built frontend as static files in production
-- **Routes**: Each file in `src/routes/` exports a Hono sub-app mounted at root. All endpoints are under `/api/`. Key routes: `projects`, `timer` (start/stop active timer), `entries` (CRUD), `reports`, `export`
+- **Routes**: Each file in `src/routes/` exports a Hono sub-app mounted at root. All endpoints are under `/api/`. Key routes: `projects`, `timer` (start/stop active timer), `entries` (CRUD), `reports`, `export`, `import` (CSV backup restore)
 - **Database**: `src/db/index.ts` exports a single `sql` tagged-template instance (postgresjs). Queries use tagged templates (`sql\`...\``) for parameterization; `sql.unsafe()` is used only for dynamic column updates
 - **Migrations**: Sequential `.sql` files in `src/db/migrations/`, tracked in a `_migrations` table. Run automatically on server start via `runMigrations()`
 
