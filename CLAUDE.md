@@ -36,6 +36,8 @@ docker compose up --build -d app
 
 This rebuilds the `time-tracker-app` image from the current source and recreates `app` in place. It does not touch the `postgres` service or its `pgdata` volume, so existing data is preserved.
 
+The same setup runs on a Raspberry Pi 5 (arm64) for 24/7 use — see `docs/raspberry-pi.md`.
+
 ## Architecture
 
 ### API (`packages/api`)

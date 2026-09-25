@@ -80,3 +80,23 @@ Import semantics:
 - **Running timer**: max one running row per file; it is skipped with a warning if a different
   timer is already running (preserves the one-running-timer app invariant).
 - Import does not check overlaps between entries (same known gap as `POST /api/entries`).
+
+## Raspberry Pi 5 / 24/7 Docker support (2026-09-26)
+
+Target: the same Docker setup runs on the Apple Silicon Mac and a Raspberry Pi 5 (arm64,
+64-bit OS required, since Bun has no 32-bit ARM build). No platform-specific files: both base
+images are multi-arch and the image is **built on the Pi itself** (user chose this over a
+registry/buildx push flow). Pi setup and ops notes are in `docs/raspberry-pi.md`.
+
+Hardening changes: `Dockerfile` pins Bun via `ARG BUN_VERSION` (bump it deliberately), sets
+`NODE_ENV=production`, runs as the non-root `bun` user (the app never writes to disk), and has a
+`HEALTHCHECK` using `bun -e fetch(...)` against `/api/health` (slim image has no curl).
+`docker-compose.yml` adds `restart: unless-stopped`, `init: true` on `app` (Bun as PID 1 ignored
+SIGTERM, so stops used to wait 10s for SIGKILL), json-file log rotation (3×10 MB),
+`stop_grace_period: 30s` on Postgres, and reads `POSTGRES_USER/PASSWORD/DB` from `.env` with
+defaults equal to the old hardcoded values (`admin`/`P4ssw0rd`/`timetracker`) so the existing Mac
+`pgdata` volume keeps working. Those vars only apply when the volume is first initialised.
+
+Known Pi 5 caveat: the default kernel uses 16K pages; if containers crash-loop with
+allocator/page-size errors, switch to the 4K kernel (`kernel=kernel8.img` in
+`/boot/firmware/config.txt`). Not yet verified on real Pi hardware.

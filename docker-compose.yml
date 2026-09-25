@@ -1,24 +1,41 @@
+# Runs unchanged on macOS (Apple Silicon / Intel) and a Raspberry Pi 5 running a
+# 64-bit OS — both images are multi-arch. See docs/raspberry-pi.md for Pi setup.
+
+# Cap container logs so a 24/7 host (e.g. the Pi's SD card) doesn't fill up
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   postgres:
     image: postgres:17-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: P4ssw0rd
-      POSTGRES_DB: timetracker
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-P4ssw0rd}
+      POSTGRES_DB: ${POSTGRES_DB:-timetracker}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 5
+    # Give Postgres time to checkpoint cleanly on shutdown/reboot
+    stop_grace_period: 30s
+    logging: *default-logging
 
   app:
     build: .
+    restart: unless-stopped
+    # Bun as PID 1 ignores SIGTERM; tini forwards it so stops are clean and fast
+    init: true
     ports:
       - "3100:3100"
     environment:
-      DATABASE_URL: postgres://admin:P4ssw0rd@postgres:5432/timetracker
+      DATABASE_URL: postgres://${POSTGRES_USER:-admin}:${POSTGRES_PASSWORD:-P4ssw0rd}@postgres:5432/${POSTGRES_DB:-timetracker}
       REPORT_TIMEZONE: ${REPORT_TIMEZONE:-Europe/Bucharest}
       REPORT_EMAIL_TO: ${REPORT_EMAIL_TO}
       REPORT_EMAIL_FROM: ${REPORT_EMAIL_FROM}
@@ -26,6 +43,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    logging: *default-logging
 
 volumes:
   pgdata:
