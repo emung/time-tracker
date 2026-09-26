@@ -121,21 +121,11 @@ SIGTERM, so stops used to wait 10s for SIGKILL), json-file log rotation (3×10 M
 defaults equal to the old hardcoded values (`admin`/`P4ssw0rd`/`timetracker`) so the existing Mac
 `pgdata` volume keeps working. Those vars only apply when the volume is first initialised.
 
-**Caddy + basic auth, Pi only (2026-09-26):** `Caddyfile` + `docker-compose.pi.yml` put a
-`caddy:2-alpine` container in front of the app (HTTPS via `tls internal` local CA, `basic_auth`).
-Caddy publishes **443 only** (`auto_https disable_redirects`): the Pi runs a host nginx on port 80
-that the user wants to keep — its `tracker` site (`server_name tracker.local`, previously
-`proxy_pass http://localhost:3100`) is repurposed as a `301` to `https://`. The user's Pi
-hostname is `rpi` and the app is reached as `tracker.local`, so `SITE_ADDRESS=tracker.local`. The override is activated **only** by
-`COMPOSE_FILE=docker-compose.yml:docker-compose.pi.yml` in the Pi's `.env` — the base
-`docker-compose.yml` is untouched and the Mac must keep working without Caddy (explicit user
-requirement). Deliberately *not* named `docker-compose.override.yml` (auto-loaded everywhere).
-The override removes the app's `3100:3100` mapping with `ports: !reset []` (Compose ≥ 2.24.4) so
-Caddy is the only entry point; Docker-published ports bypass ufw, so this is the real protection.
-`SITE_ADDRESS`, `BASIC_AUTH_USER`, `BASIC_AUTH_HASH` come from `.env` via `{$VAR}` placeholders
-(no secrets in git); the bcrypt hash must be **single-quoted** in `.env` or Compose interpolates
-its `$`s. Local CA persists in the `caddy_data` volume. Verified locally: 308 redirect, 401 without
-or with wrong creds, pass-through with correct creds. Not yet verified on the real Pi.
+**No auth / no reverse proxy (2026-09-26):** a Caddy (HTTPS + basic auth) setup for the Pi was
+added and then reverted at the user's request — they don't want any auth on this app. Don't
+re-propose Caddy/basic auth; the app is exposed on `3100` directly. (On the Pi, the host nginx
+`tracker` site was briefly changed to redirect to HTTPS; if that edit was applied there, it must
+be restored to `proxy_pass http://localhost:3100`.)
 
 Known Pi 5 caveat: the default kernel uses 16K pages; if containers crash-loop with
 allocator/page-size errors, switch to the 4K kernel (`kernel=kernel8.img` in
