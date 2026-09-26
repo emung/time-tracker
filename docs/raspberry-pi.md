@@ -69,8 +69,9 @@ sudo systemctl enable --now avahi-alias-time
 (Alternative: `sudo hostnamectl set-hostname time` makes the Pi itself `time.local`, but
 `rpi.local` then stops resolving.)
 
-**2. nginx site** (`/etc/nginx/sites-available/tracker`, enabled in `sites-enabled/`). Replace
-any old contents, e.g. an HTTPS redirect from a previous Caddy setup:
+**2. nginx site** (`/etc/nginx/sites-available/time-tracker`, symlinked into `sites-enabled/`).
+Also unlink any old `tracker` site that redirects to HTTPS (leftover from a previous Caddy
+setup): `sudo rm /etc/nginx/sites-enabled/tracker`.
 
 ```nginx
 server {
