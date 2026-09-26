@@ -123,9 +123,11 @@ defaults equal to the old hardcoded values (`admin`/`P4ssw0rd`/`timetracker`) so
 
 **No auth / no reverse proxy (2026-09-26):** a Caddy (HTTPS + basic auth) setup for the Pi was
 added and then reverted at the user's request — they don't want any auth on this app. Don't
-re-propose Caddy/basic auth; the app is exposed on `3100` directly. (On the Pi, the host nginx
-`tracker` site was briefly changed to redirect to HTTPS; if that edit was applied there, it must
-be restored to `proxy_pass http://localhost:3100`.)
+re-propose Caddy/basic auth; the app is exposed on `3100` directly. The user wants to reach it
+at plain `http://time.local` (previously `https://rpi.local`): this is done Pi-side with an Avahi
+mDNS alias + a host nginx site on port 80 (`server_name time.local` → `localhost:3100`), documented
+in `docs/raspberry-pi.md`. Nothing in the repo's compose files is involved. If the nginx `tracker`
+site was earlier changed to an HTTPS redirect, it must be rewritten as that proxy site.
 
 Known Pi 5 caveat: the default kernel uses 16K pages; if containers crash-loop with
 allocator/page-size errors, switch to the 4K kernel (`kernel=kernel8.img` in

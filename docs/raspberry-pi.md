@@ -39,6 +39,55 @@ Set `POSTGRES_*` **before** the first start — Postgres only reads them when it
 
 Note the app has no authentication — keep port 3100 on your LAN (don't port-forward it).
 
+## Reaching it as `http://time.local`
+
+Two Pi-side pieces (nothing here lives in the repo's compose files): an mDNS name so `time.local`
+resolves on the LAN, and a host nginx site on port 80 that forwards to the app.
+
+**1. mDNS alias.** The Pi already answers to `<hostname>.local` via Avahi. To add `time.local`
+*without* renaming the Pi (so `rpi.local` keeps working for SSH), publish an alias:
+
+```bash
+sudo apt install -y avahi-utils
+sudo tee /etc/systemd/system/avahi-alias-time.service >/dev/null <<'EOF'
+[Unit]
+Description=Publish time.local mDNS alias
+After=avahi-daemon.service network-online.target
+Requires=avahi-daemon.service
+
+[Service]
+ExecStart=/bin/sh -c 'avahi-publish -a -R time.local "$(hostname -I | cut -d" " -f1)"'
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl enable --now avahi-alias-time
+```
+
+(Alternative: `sudo hostnamectl set-hostname time` makes the Pi itself `time.local`, but
+`rpi.local` then stops resolving.)
+
+**2. nginx site** (`/etc/nginx/sites-available/tracker`, enabled in `sites-enabled/`). Replace
+any old contents, e.g. an HTTPS redirect from a previous Caddy setup:
+
+```nginx
+server {
+    listen 80;
+    server_name time.local;
+
+    location / {
+        proxy_pass http://localhost:3100;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+Then `sudo nginx -t && sudo systemctl reload nginx`. Check from the Mac with
+`curl -i http://time.local/api/health`.
+
 ## Running 24/7
 
 The compose file already covers this:
