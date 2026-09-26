@@ -134,3 +134,14 @@ Verified working on the real Pi and from the Mac (2026-09-26).
 Known Pi 5 caveat: the default kernel uses 16K pages; if containers crash-loop with
 allocator/page-size errors, switch to the 4K kernel (`kernel=kernel8.img` in
 `/boot/firmware/config.txt`). Not yet verified on real Pi hardware.
+
+## Favicon / PWA icons (2026-09-26)
+
+Icon is a stopwatch: `packages/web/public/favicon.svg` (source of truth). Installing as a PWA
+(Vivaldi/Chromium) shows a letter fallback unless a web app manifest with PNG icons exists, so
+`public/manifest.webmanifest` + `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` (full-bleed,
+content scaled to 75% for the safe zone) and `apple-touch-icon.png` (180) are linked from
+`index.html`. The PNGs are **generated, not hand-made**: rasterised from the SVG with
+`@resvg/resvg-js` (installed ad hoc outside the repo — no SVG rasteriser is installed on the Mac).
+If the SVG changes, re-render all four PNGs. No service worker (not needed for installability).
+An already-installed PWA keeps its old icon until uninstalled and reinstalled.
