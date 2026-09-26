@@ -11,6 +11,15 @@ A time-tracking web app with a Bun monorepo (workspaces). Two packages:
 - **`packages/api`** — Hono REST API on Bun (port 3100), PostgreSQL via `postgres` (postgresjs), file-based SQL migrations
 - **`packages/web`** — React 19 SPA with Vite, Tailwind CSS v4, React Router v7, TanStack React Query v5
 
+## Git Workflow
+
+- Working directly on the `main` branch is expected for this project — no feature branches needed.
+- Never run `git commit` or `git push` yourself. Implement and stage changes, then stop and wait for my explicit approval before committing.
+- Once an implementation is complete, propose one concise commit message (Conventional Commits style, e.g. `fix: handle null pointer in OrderService`) so I can commit it myself.
+- Never force-push or rewrite history on `main`.
+- Do not add `Co-Authored-By` trailers (or any Claude/Anthropic attribution or generated-by footers) to commit messages.
+- When drafting a PR/MR description, do not include `Co-Authored-By` trailers or Claude attribution there either.
+
 ## Commands
 
 ```bash
